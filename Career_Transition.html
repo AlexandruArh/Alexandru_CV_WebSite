@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Dashboard | Alexandru-Ionut Arhip</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; 
+            height: 300px; 
+            max-height: 400px; 
+            margin: 0 auto; 
+        }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 300ms; }
+        
+        /* Custom Scrollbar for clean look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Professional Slate. Background: #f3f4f6 (Cool Gray). Accents: #3b82f6 (Blue) for Tech, #d97706 (Amber) for Construction history. -->
+    
+    <!-- Application Structure Plan: 
+         1. Header: Identity & Contact Info.
+         2. Navigation: Functional tabs to switch views (Dashboard, Experience Timeline, Tech Stack, Projects).
+         3. Dynamic Content Area:
+            - Dashboard: High-level metrics, chart showing the career pivot (Years in Construction vs Study), and core value proposition.
+            - Tech Stack: Interactive charts for skills (Languages vs Tools) and a mapping of 'Transferable Skills' (Construction -> Code).
+            - Experience Timeline: A vertical interactive timeline of the work history with filtering capability.
+            - Projects: Detail cards for academic work.
+         4. Rationale: This structure separates the "Past" (Experience) from the "Future" (Skills/Projects) while the Dashboard synthesizes them, allowing recruiters to quickly find the relevant info (reliability vs technical potential).
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Career Composition Chart (Doughnut): Goal -> Compare volume of experience. Viz -> Chart.js Doughnut. Justification -> Instantly visualizes the depth of work history vs the newness of the degree.
+         2. Skill Proficiency (Bar Chart): Goal -> Show current technical focus. Viz -> Chart.js Bar. Justification -> Standard, easy to read comparison of language comfort levels.
+         3. Transferable Skills Map (Interactive Cards): Goal -> Explain how construction applies to coding. Viz -> HTML Grid + JS Hover. Justification -> Text-heavy connections need space and interaction to be digested.
+         4. Timeline (HTML/CSS): Goal -> Show reliability over time. Viz -> Vertical list with connecting lines. Justification -> Linear narrative is best for work history.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header Section -->
+    <header class="bg-white border-b border-slate-200 shadow-sm z-10 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Alexandru-Ionut Arhip</h1>
+                <p class="text-slate-500 text-sm">Software Engineering Student | Transforming 8 Years of Industrial Precision into Code</p>
+            </div>
+            <div class="flex flex-wrap gap-3 text-sm">
+                <a href="mailto:alexandruarhip98@outlook.com" class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition-colors">
+                    <span>&#9993;</span> Email
+                </a>
+                <span class="flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full text-slate-600 cursor-default">
+                    <span>&#9742;</span> 07712 560403
+                </span>
+                <span class="flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full text-slate-600 cursor-default">
+                    <span>&#8962;</span> Aylesbury
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Container -->
+    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
+        
+        <!-- Sidebar Navigation (Desktop) / Topbar (Mobile) -->
+        <nav class="w-full md:w-64 bg-white border-r border-slate-200 flex-shrink-0 md:flex md:flex-col overflow-y-auto hidden md:block" id="desktop-nav">
+            <div class="p-6 space-y-1">
+                <button onclick="navigateTo('dashboard')" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-blue-600 bg-blue-50 transition-all flex items-center gap-3" data-target="dashboard">
+                    <span>&#128202;</span> Overview
+                </button>
+                <button onclick="navigateTo('skills')" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-3" data-target="skills">
+                    <span>&#128187;</span> Skills & Stack
+                </button>
+                <button onclick="navigateTo('experience')" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-3" data-target="experience">
+                    <span>&#128119;</span> Experience Journey
+                </button>
+                <button onclick="navigateTo('projects')" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-3" data-target="projects">
+                    <span>&#128640;</span> Academic Projects
+                </button>
+            </div>
+            
+            <div class="mt-auto p-6 border-t border-slate-100">
+                <div class="bg-amber-50 rounded-lg p-4 border border-amber-100">
+                    <p class="text-xs font-bold text-amber-800 uppercase tracking-wide mb-1">Key Insight</p>
+                    <p class="text-sm text-amber-900 italic">"Handling an excavator requires focus and blueprint reading. Coding requires the same logic."</p>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around p-3 z-50">
+            <button onclick="navigateTo('dashboard')" class="text-2xl p-2 nav-btn-mobile text-blue-600" data-target="dashboard">&#128202;</button>
+            <button onclick="navigateTo('skills')" class="text-2xl p-2 nav-btn-mobile text-slate-400" data-target="skills">&#128187;</button>
+            <button onclick="navigateTo('experience')" class="text-2xl p-2 nav-btn-mobile text-slate-400" data-target="experience">&#128119;</button>
+            <button onclick="navigateTo('projects')" class="text-2xl p-2 nav-btn-mobile text-slate-400" data-target="projects">&#128640;</button>
+        </div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 scroll-smooth" id="main-content">
+            
+            <!-- SECTION: DASHBOARD -->
+            <div id="view-dashboard" class="space-y-8 animate-fade-in">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2">Executive Summary</h2>
+                    <p class="text-slate-600 leading-relaxed">
+                        I am a Software Engineering student at the University of Bolton with a unique background. After spending eight years in high-precision construction and heavy machinery operation, I am pivoting to technology. My experience has forged an unshakeable work ethic, elite problem-solving abilities under pressure, and the discipline to execute complex technical blueprints—skills I now apply to Java, Python, and Software Architecture.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Stat Card 1 -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                        <div class="text-slate-500 text-sm font-medium uppercase">Current Status</div>
+                        <div class="text-3xl font-bold text-slate-900 mt-1">B.Sc. Student</div>
+                        <div class="text-blue-600 text-sm mt-1">Software Engineering</div>
+                    </div>
+                    <!-- Stat Card 2 -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-amber-500">
+                        <div class="text-slate-500 text-sm font-medium uppercase">Industry Experience</div>
+                        <div class="text-3xl font-bold text-slate-900 mt-1">8 Years</div>
+                        <div class="text-amber-600 text-sm mt-1">Construction & Machinery</div>
+                    </div>
+                    <!-- Stat Card 3 -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-emerald-500">
+                        <div class="text-slate-500 text-sm font-medium uppercase">Reliability Record</div>
+                        <div class="text-3xl font-bold text-slate-900 mt-1">100%</div>
+                        <div class="text-emerald-600 text-sm mt-1">Safety & Attendance</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Chart: Career Composition -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <h3 class="font-bold text-slate-800 mb-4">The Pivot: Experience Distribution</h3>
+                        <p class="text-sm text-slate-500 mb-4">Visualizing the depth of my industrial background supporting my new academic focus.</p>
+                        <div class="chart-container">
+                            <canvas id="careerChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Text: Why Hire Me? -->
+                    <div class="bg-slate-800 text-white p-6 rounded-xl shadow-sm flex flex-col justify-center">
+                        <h3 class="font-bold text-lg mb-4 text-blue-300">Why hire a former Operator?</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <span class="bg-blue-500/20 text-blue-300 p-1 rounded">1</span>
+                                <p class="text-slate-300 text-sm"><strong>Spatial & Logical Awareness:</strong> Operating a 360 excavator isn't just manual labor; it's calculating angles, loads, and hazards in real-time. This translates directly to algorithmic thinking.</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="bg-blue-500/20 text-blue-300 p-1 rounded">2</span>
+                                <p class="text-slate-300 text-sm"><strong>Blueprint to Build:</strong> I've spent years turning abstract paper plans into physical reality. I understand the Software Development Life Cycle (SDLC) because I've lived the "Construction Life Cycle."</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="bg-blue-500/20 text-blue-300 p-1 rounded">3</span>
+                                <p class="text-slate-300 text-sm"><strong>Zero-Downtime Reliability:</strong> In construction, if you stop, the project stops. I bring that same relentless consistency to debugging and development.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: SKILLS -->
+            <div id="view-skills" class="hidden space-y-8 animate-fade-in">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2">Technical & Transferable Skills</h2>
+                    <p class="text-slate-600">
+                        My skill set is a hybrid of academic programming knowledge and rigorous industrial soft skills. While I am early in my coding journey, my foundation in logic and management is solid.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Technical Skills Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <h3 class="font-bold text-slate-800 mb-4">Programming Proficiency</h3>
+                        <div class="chart-container">
+                            <canvas id="skillsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Transferable Skills Matrix -->
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-slate-800 mb-4">The "Construction to Code" Translation</h3>
+                        <!-- Skill Item 1 -->
+                        <div class="bg-white p-4 rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-slate-700">Blueprint Reading</span>
+                                <span class="text-blue-500">&#8594;</span>
+                                <span class="font-bold text-blue-600">Software Architecture</span>
+                            </div>
+                            <p class="text-sm text-slate-500 group-hover:text-slate-700">Interpreting complex 2D plans for 3D structures is identical to understanding UML diagrams and class structures before writing code.</p>
+                        </div>
+                        <!-- Skill Item 2 -->
+                        <div class="bg-white p-4 rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-slate-700">Safety Protocols</span>
+                                <span class="text-blue-500">&#8594;</span>
+                                <span class="font-bold text-blue-600">Error Handling & Testing</span>
+                            </div>
+                            <p class="text-sm text-slate-500 group-hover:text-slate-700">Checking for hazards before digging is the same mindset as writing unit tests and exception handling to prevent system crashes.</p>
+                        </div>
+                        <!-- Skill Item 3 -->
+                        <div class="bg-white p-4 rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-slate-700">Site Management</span>
+                                <span class="text-blue-500">&#8594;</span>
+                                <span class="font-bold text-blue-600">Project Management</span>
+                            </div>
+                            <p class="text-sm text-slate-500 group-hover:text-slate-700">Coordinating teams and machinery to meet a deadline provides a strong basis for Agile workflows and team collaboration.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tools & Certs Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-3">Software Tools</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-600">Git & GitHub</span>
+                            <span class="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-600">VS Code</span>
+                            <span class="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-600">IntelliJ IDEA</span>
+                            <span class="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-600">MS Excel</span>
+                            <span class="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-600">SQL Basics</span>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                        <h3 class="font-bold text-amber-900 mb-3">Industrial Certifications</h3>
+                        <ul class="space-y-1 text-sm text-amber-800">
+                            <li>&#10003; CPCS Blue: 360 Excavator + Lifting Ops</li>
+                            <li>&#10003; NPORS Telescopic Handler</li>
+                            <li>&#10003; Full UK Driving License</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: EXPERIENCE -->
+            <div id="view-experience" class="hidden space-y-8 animate-fade-in">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 mb-1">Experience Journey</h2>
+                        <p class="text-slate-600 text-sm">A timeline of reliability, hard work, and education.</p>
+                    </div>
+                    <div class="flex bg-slate-100 p-1 rounded-lg">
+                        <button onclick="filterTimeline('all')" class="filter-btn active px-4 py-1.5 text-sm rounded-md font-medium transition-colors bg-white shadow-sm text-slate-800" data-filter="all">All</button>
+                        <button onclick="filterTimeline('education')" class="filter-btn px-4 py-1.5 text-sm rounded-md font-medium text-slate-500 hover:text-slate-800 transition-colors" data-filter="education">Education</button>
+                        <button onclick="filterTimeline('work')" class="filter-btn px-4 py-1.5 text-sm rounded-md font-medium text-slate-500 hover:text-slate-800 transition-colors" data-filter="work">Work</button>
+                    </div>
+                </div>
+
+                <div class="relative border-l-2 border-slate-200 ml-3 md:ml-6 space-y-8 pb-8" id="timeline-container">
+                    <!-- Timeline items generated by JS -->
+                </div>
+            </div>
+
+            <!-- SECTION: PROJECTS -->
+            <div id="view-projects" class="hidden space-y-8 animate-fade-in">
+                 <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2">Academic Projects</h2>
+                    <p class="text-slate-600">
+                        Practical applications of my studies. These projects demonstrate my grasp of core software engineering concepts like Object-Oriented Programming and Automation.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="projects-container">
+                    <!-- Projects injected via JS -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA STORE ---
+        const state = {
+            currentView: 'dashboard',
+            filter: 'all'
+        };
+
+        const timelineData = [
+            {
+                type: 'education',
+                date: 'April 2023 – Present',
+                title: 'B.Sc. (Hons) Software Engineering',
+                company: 'University of Bolton',
+                location: 'Wembley, London',
+                desc: 'Focusing on Software Architecture, OOP, Data Structures, and Database Systems. Developing competencies in SDLC methodologies.'
+            },
+            {
+                type: 'work',
+                date: 'July 2023 – Jan 2025',
+                title: '360 Excavator Operator',
+                company: 'Cappagh-Oxford',
+                location: 'Oxfordshire',
+                desc: 'Operated sophisticated heavy machinery with high spatial awareness. Maintained 100% safety record while adhering to strict engineering specs.'
+            },
+            {
+                type: 'work',
+                date: 'July 2018 – July 2023',
+                title: '360 Excavator Operator / Ground Worker',
+                company: 'AD Bly Construction / Entex / MJL',
+                location: 'Various Locations',
+                desc: 'Analyzed site blueprints for precision groundwork. Solved on-site technical issues immediately to prevent delays. Demonstrated extreme long-term reliability.'
+            },
+            {
+                type: 'work',
+                date: 'Sept 2016 – July 2018',
+                title: 'Labourer / Driver / MEWP Operator',
+                company: 'BAM Construction',
+                location: 'Cambridge / Aylesbury',
+                desc: 'Foundational role in construction, learning safety protocols and site logistics.'
+            },
+            {
+                type: 'education',
+                date: '2012 – 2016',
+                title: 'GCSE Equivalent (Tourism)',
+                company: 'Grigore Cobălcescu Moineşti',
+                location: 'Bacău',
+                desc: 'Secondary education.'
+            }
+        ];
+
+        const projectsData = [
+            {
+                title: 'University Management System',
+                tech: ['Java', 'OOP', 'File I/O'],
+                desc: 'A robust desktop application designed to handle student records efficiently.',
+                features: [
+                    'Implements secure Object-Oriented principles (Encapsulation)',
+                    'Allows CRUD operations (Create, Read, Update, Delete) for student data',
+                    'Focus on clean, readable code structure'
+                ],
+                icon: '&#127891;'
+            },
+            {
+                title: 'Automated Data Script',
+                tech: ['Python', 'Automation', 'Data parsing'],
+                desc: 'A script developed to parse text files and extract specific informational patterns, automating a manual logging task.',
+                features: [
+                    'Reduces manual data entry time',
+                    'Uses efficient string manipulation algorithms',
+                    'Simple command-line interface'
+                ],
+                icon: '&#128200;'
+            }
+        ];
+
+        // --- CORE NAVIGATION ---
+        function navigateTo(viewId) {
+            // Update State
+            state.currentView = viewId;
+
+            // UI Updates: Hide all views, Show target
+            ['dashboard', 'skills', 'experience', 'projects'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+            });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Update Nav Buttons (Desktop)
+            document.querySelectorAll('#desktop-nav .nav-btn').forEach(btn => {
+                if(btn.dataset.target === viewId) {
+                    btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+                    btn.classList.add('text-blue-600', 'bg-blue-50');
+                } else {
+                    btn.classList.add('text-slate-600', 'hover:bg-slate-50');
+                    btn.classList.remove('text-blue-600', 'bg-blue-50');
+                }
+            });
+
+            // Update Nav Buttons (Mobile)
+            document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+                if(btn.dataset.target === viewId) {
+                    btn.classList.add('text-blue-600');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-blue-600');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            // Trigger Chart Resize if needed
+            if(viewId === 'dashboard' && window.careerChartInstance) window.careerChartInstance.resize();
+            if(viewId === 'skills' && window.skillsChartInstance) window.skillsChartInstance.resize();
+        }
+
+        // --- TIMELINE GENERATOR ---
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = '';
+
+            timelineData.forEach(item => {
+                if(state.filter !== 'all' && item.type !== state.filter) return;
+
+                const isEdu = item.type === 'education';
+                const icon = isEdu ? '&#127891;' : '&#128119;'; // Cap vs Helmet
+                const colorClass = isEdu ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-amber-100 text-amber-600 border-amber-200';
+
+                const html = `
+                    <div class="relative pl-8 md:pl-10 group">
+                        <!-- Icon Dot -->
+                        <div class="absolute left-[-9px] top-0 w-8 h-8 rounded-full ${colorClass} border-2 flex items-center justify-center text-sm shadow-sm z-10 bg-white">
+                            ${icon}
+                        </div>
+                        
+                        <!-- Content Card -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm card-hover transition-all">
+                            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold tracking-wide ${isEdu ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'} mb-2">
+                                ${item.date}
+                            </span>
+                            <h3 class="text-lg font-bold text-slate-800">${item.title}</h3>
+                            <div class="text-sm text-slate-500 font-medium mb-3">${item.company} &bull; ${item.location}</div>
+                            <p class="text-slate-600 text-sm leading-relaxed">${item.desc}</p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function filterTimeline(type) {
+            state.filter = type;
+            
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.dataset.filter === type) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    btn.classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
+                    btn.classList.add('text-slate-500');
+                }
+            });
+
+            renderTimeline();
+        }
+
+        // --- PROJECT GENERATOR ---
+        function renderProjects() {
+            const container = document.getElementById('projects-container');
+            container.innerHTML = '';
+
+            projectsData.forEach(proj => {
+                const tags = proj.tech.map(t => `<span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">${t}</span>`).join('');
+                const feats = proj.features.map(f => `<li class="flex items-start gap-2"><span class="text-blue-400 mt-1">&#8250;</span><span>${f}</span></li>`).join('');
+
+                const html = `
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 card-hover transition-all flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-xl">${proj.icon}</div>
+                            <div class="flex gap-2">${tags}</div>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">${proj.title}</h3>
+                        <p class="text-slate-600 text-sm mb-4 flex-grow">${proj.desc}</p>
+                        <div class="bg-slate-50 rounded-lg p-4 mt-auto">
+                            <p class="text-xs font-bold text-slate-500 uppercase mb-2">Key Implementation Details</p>
+                            <ul class="text-sm text-slate-600 space-y-1">
+                                ${feats}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        // --- CHARTS INITIALIZATION ---
+        function initCharts() {
+            // 1. Career Composition (Doughnut)
+            const ctxCareer = document.getElementById('careerChart').getContext('2d');
+            window.careerChartInstance = new Chart(ctxCareer, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Construction Experience', 'Software Studies'],
+                    datasets: [{
+                        data: [8, 2], // Approx years
+                        backgroundColor: ['#d97706', '#3b82f6'], // Amber-600, Blue-500
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} Years`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // 2. Skills Proficiency (Bar)
+            const ctxSkills = document.getElementById('skillsChart').getContext('2d');
+            window.skillsChartInstance = new Chart(ctxSkills, {
+                type: 'bar',
+                data: {
+                    labels: ['Java', 'Python', 'C#', 'SQL', 'HTML/CSS', 'Git'],
+                    datasets: [{
+                        label: 'Academic Proficiency Level',
+                        data: [75, 70, 60, 50, 65, 80], // Estimated relative skill
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bar
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            grid: { display: false },
+                            ticks: { display: false } // Hide numbers, abstract concept
+                        },
+                        y: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    if(val > 70) return ' Advanced Academic';
+                                    if(val > 50) return ' Intermediate';
+                                    return ' Fundamental';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            renderTimeline();
+            renderProjects();
+        });
+
+    </script>
+</body>
+</html>
